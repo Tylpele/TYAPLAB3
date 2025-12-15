@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    /* === Базовые настройки путей === */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* === Цель и формат модулей (для браузера!) === */
+    "target": "ES2020",        // современный JS, который понимают браузеры
+    "module": "none",        // ES-модули вместо CommonJS
+    "moduleResolution": "node",
+    "lib": ["DOM", "ES2020"],  // чтобы были доступны window, document и т.д.
+
+    /* === Проверки типов === */
+    "strict": true,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* === Прочее === */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
