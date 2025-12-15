@@ -6,8 +6,7 @@
 
     /* === Цель и формат модулей (для браузера!) === */
     "target": "ES2020",        // современный JS, который понимают браузеры
-    "module": "none",        // ES-модули вместо CommonJS
-    "moduleResolution": "node",
+    "module": "CommonJS",        // ES-модули вместо CommonJS
     "lib": ["DOM", "ES2020"],  // чтобы были доступны window, document и т.д.
 
     /* === Проверки типов === */
