@@ -17,6 +17,15 @@ window.addEventListener("DOMContentLoaded", () => {
   document.body.innerHTML = `
     <h1>Расчёт функции</h1>
 
+    <figure style="text-align: center; margin-bottom: 20px;">
+      <img
+        src="formula.png"
+        alt="Формула расчёта функции"
+        style="max-width: 100%;"
+      />
+      <figcaption>Формула расчёта функции</figcaption>
+    </figure>
+
     <h2>Аргументы, диапазон и дискрет:</h2>
     <table id="startTable" border="1" cellpadding="6" cellspacing="0">
       <tr><th>Аргумент</th><th>Диапазон</th><th>Дискрет</th></tr>
@@ -31,7 +40,13 @@ window.addEventListener("DOMContentLoaded", () => {
     <h2>Введите значения переменных:</h2>
     <form id="inputForm">
       <table border="1" cellpadding="6" cellspacing="0">
-        <tr><th>Переменная</th><th>Значение</th><th>Диапазон</th><th>Шаг</th><th>Ограничения</th></tr>
+        <tr>
+          <th>Переменная</th>
+          <th>Значение</th>
+          <th>Диапазон</th>
+          <th>Шаг</th>
+          <th>Ограничения</th>
+        </tr>
         ${inputRow("a", aStart, aEnd, aStep, "Не должно быть 0")}
         ${inputRow("b", bStart, bEnd, bStep, "Не должно быть -d")}
         ${inputRow("d", dStart, dEnd, dStep, "Не должно быть 0.07 и -b")}
@@ -44,12 +59,11 @@ window.addEventListener("DOMContentLoaded", () => {
     <div id="resultContainer"></div>
   `;
 
-  // --- Подсветка полей ввода в реальном времени ---
+  // --- Подсветка полей ввода ---
   const fields = ["a", "b", "d", "f"];
   fields.forEach(name => {
     const input = document.getElementById(name) as HTMLInputElement;
     input.addEventListener("input", () => {
-      // пересветка всех полей при любом изменении
       fields.forEach(fieldName => {
         const field = document.getElementById(fieldName) as HTMLInputElement;
         validateAndHighlight(field, fieldName);
@@ -65,12 +79,18 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// --- Функции для таблицы ---
+// --- Функции для таблиц ---
 function startTableRow(argument: string, range: string, step: string) {
   return `<tr><td>${argument}</td><td>${range}</td><td>${step}</td></tr>`;
 }
 
-function inputRow(name: string, start: number, end: number, step: number, constraint: string): string {
+function inputRow(
+  name: string,
+  start: number,
+  end: number,
+  step: number,
+  constraint: string
+): string {
   return `
     <tr>
       <td>${name}</td>
@@ -92,7 +112,7 @@ function validateAndHighlight(input: HTMLInputElement, name: string) {
   const currentD = parseFloat(dField.value);
 
   let start = 0, end = 0, step = 0;
-  switch(name) {
+  switch (name) {
     case "a": start = aStart; end = aEnd; step = aStep; break;
     case "b": start = bStart; end = bEnd; step = bStep; break;
     case "d": start = dStart; end = dEnd; step = dStep; break;
@@ -101,19 +121,23 @@ function validateAndHighlight(input: HTMLInputElement, name: string) {
 
   let valid = true;
 
-  // Проверка диапазона и дискрета
-  if (isNaN(value) || value < start || value > end || !checkDiscret(value, start, end, step)) {
+  if (
+    isNaN(value) ||
+    value < start ||
+    value > end ||
+    !checkDiscret(value, start, end, step)
+  ) {
     valid = false;
   }
 
-  // Проверка ограничений
   if (!checkForbiddenValues(value, name, currentB, currentD)) {
     valid = false;
   }
 
-  // Динамическая проверка на b ≠ -d и d ≠ -b
-  if ((name === "b" && !isNaN(currentD) && value === -currentD) ||
-      (name === "d" && !isNaN(currentB) && value === -currentB)) {
+  if (
+    (name === "b" && !isNaN(currentD) && value === -currentD) ||
+    (name === "d" && !isNaN(currentB) && value === -currentB)
+  ) {
     valid = false;
   }
 
@@ -136,12 +160,27 @@ function handleFormSubmit() {
   showResultTable(a, b, c, d, e, f, result);
 }
 
-// --- Валидация при сабмите ---
-function validateInput(value: number, name: string, start: number, end: number, step: number): boolean {
+// --- Валидация ---
+function validateInput(
+  value: number,
+  name: string,
+  start: number,
+  end: number,
+  step: number
+): boolean {
   if (isNaN(value)) { alert(`Введите число для ${name}`); return false; }
-  if (value < start || value > end) { alert(`${name} вне диапазона [${start}, ${end}]`); return false; }
-  if (!checkDiscret(value, start, end, step)) { alert(`${name} не соответствует шагу ${step}`); return false; }
-  if (!checkForbiddenValues(value, name, b, d)) { alert(`Значение ${name} запрещено`); return false; }
+  if (value < start || value > end) {
+    alert(`${name} вне диапазона [${start}, ${end}]`);
+    return false;
+  }
+  if (!checkDiscret(value, start, end, step)) {
+    alert(`${name} не соответствует шагу ${step}`);
+    return false;
+  }
+  if (!checkForbiddenValues(value, name, b, d)) {
+    alert(`Значение ${name} запрещено`);
+    return false;
+  }
   return true;
 }
 
@@ -153,8 +192,13 @@ function checkDiscret(value: number, start: number, end: number, step: number): 
   return fromBottom < epsilon || Math.abs(fromBottom - step) < epsilon || fromTop < epsilon;
 }
 
-function checkForbiddenValues(value: number, name: string, currentB: number, currentD: number): boolean {
-  switch(name) {
+function checkForbiddenValues(
+  value: number,
+  name: string,
+  currentB: number,
+  currentD: number
+): boolean {
+  switch (name) {
     case "a":
     case "f": return value !== 0;
     case "d": return value !== 0.07 && value !== -currentB;
@@ -164,7 +208,14 @@ function checkForbiddenValues(value: number, name: string, currentB: number, cur
 }
 
 // --- Вычисление функции ---
-function calculateFunction(a: number, b: number, c: number, d: number, e: number, f: number): number {
+function calculateFunction(
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number
+): number {
   return (a + c + d) / (e * f) +
          (c + b) / c -
          (d - a) / (a * c) +
@@ -173,7 +224,15 @@ function calculateFunction(a: number, b: number, c: number, d: number, e: number
 }
 
 // --- Вывод результата ---
-function showResultTable(a: number, b: number, c: number, d: number, e: number, f: number, result: number) {
+function showResultTable(
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  result: number
+) {
   const container = document.getElementById("resultContainer")!;
   container.innerHTML = `
     <h2>Результаты вычислений:</h2>
@@ -189,8 +248,6 @@ function showResultTable(a: number, b: number, c: number, d: number, e: number, 
     </table>
   `;
 }
-
-
 
 function resultRow(name: string, range: string, value: number) {
   return `<tr><td>${name}</td><td>${range}</td><td>${value.toFixed(6)}</td><td></td></tr>`;
