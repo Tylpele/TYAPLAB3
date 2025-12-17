@@ -235,18 +235,33 @@ function showResultTable(
 ) {
   const container = document.getElementById("resultContainer")!;
   container.innerHTML = `
-    <h2>Результаты вычислений:</h2>
-    <table border="1" cellpadding="6" cellspacing="0">
-      <tr><th>Аргумент</th><th>Диапазон</th><th>Значение</th><th>Функция</th></tr>
-      ${resultRow("a", `[${aStart}; ${aEnd}]`, a)}
-      ${resultRow("b", `[${bStart}; ${bEnd}]`, b)}
-      ${resultRow("c", "Константа", c)}
-      ${resultRow("d", `[${dStart}; ${dEnd}]`, d)}
-      ${resultRow("e", "Константа", e)}
-      ${resultRow("f", `[${fStart}; ${fEnd}]`, f)}
-      <tr><td>Функция</td><td></td><td></td><td>${result.toFixed(6)}</td></tr>
-    </table>
-  `;
+<h2>Результаты вычислений:</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr>
+    <th>Аргумент</th>
+    <th>Диапазон</th>
+    <th>Значение</th>
+    <th>Функция</th>
+    <th>Погрешность</th>
+  </tr>
+
+  ${resultRow("a", `[${aStart}; ${aEnd}]`, a)}
+  ${resultRow("b", `[${bStart}; ${bEnd}]`, b)}
+  ${resultRow("c", "Константа", c)}
+  ${resultRow("d", `[${dStart}; ${dEnd}]`, d)}
+  ${resultRow("e", "Константа", e)}
+  ${resultRow("f", `[${fStart}; ${fEnd}]`, f)}
+
+  <tr>
+    <td>Функция</td>
+    <td></td>
+    <td></td>
+    <td>${result.toFixed(6)}</td>
+    <td>"ПОГРЕШНОСТЬ"</td>
+  </tr>
+</table>
+`;
+
 }
 
 function resultRow(name: string, range: string, value: number) {
