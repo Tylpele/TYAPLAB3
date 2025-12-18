@@ -50,50 +50,88 @@ window.addEventListener("DOMContentLoaded", () => {
         ${inputRow("f", fStart, fEnd, fStep, "Не должно быть 0")}
       </table>
       <br/>
+
+      <div class="file-load">
+        <p>Или загрузите из .txt файла (формат: a b d f через пробел, один набор на строку):</p>
+        <input type="file" id="load-from-file" accept=".txt"/>
+      </div>
+      <br/>
+
       <button type="submit">Рассчитать</button>
     </form>
 
     <div id="resultContainer"></div>
   `;
-    // --- Подсветка полей ввода ---
     const fields = ["a", "b", "d", "f"];
     fields.forEach(name => {
         const input = document.getElementById(name);
-        input.addEventListener("input", () => {
+        input?.addEventListener("input", () => {
             fields.forEach(fieldName => {
                 const field = document.getElementById(fieldName);
-                validateAndHighlight(field, fieldName);
+                if (field)
+                    validateAndHighlight(field, fieldName);
             });
         });
     });
-    // --- Обработка формы ---
     const form = document.getElementById("inputForm");
-    form.addEventListener("submit", (e) => {
+    form?.addEventListener("submit", (e) => {
         e.preventDefault();
-        handleFormSubmit();
+        handleFormSubmitSingle();
+    });
+    // --- Загрузка из файла без ограничения на количество наборов ---
+    document.getElementById("load-from-file")?.addEventListener("change", (event) => {
+        const input = event.target;
+        const file = input.files?.[0];
+        if (!file)
+            return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const text = reader.result;
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            const resultContainer = document.getElementById("resultContainer");
+            resultContainer.innerHTML = "<h2>Результаты вычислений:</h2>";
+            lines.forEach((line, idx) => {
+                const parts = line.split(/\s+/).map(Number);
+                if (parts.length !== 4 || parts.some(isNaN)) {
+                    alert(`Некорректный формат в строке ${idx + 1}: ${line}`);
+                    return;
+                }
+                const [a, bVal, dVal, f] = parts;
+                if (!validateInput(a, "a", aStart, aEnd, aStep))
+                    return;
+                if (!validateInput(bVal, "b", bStart, bEnd, bStep))
+                    return;
+                if (!validateInput(dVal, "d", dStart, dEnd, dStep))
+                    return;
+                if (!validateInput(f, "f", fStart, fEnd, fStep))
+                    return;
+                const res = calculateFunction(a, bVal, c, dVal, e, f);
+                showResultTableSingle(a, bVal, c, dVal, e, f, res, idx + 1);
+            });
+        };
+        reader.readAsText(file);
     });
 });
-// --- Функции для таблиц ---
+// --- Табличные функции ---
 function startTableRow(argument, range, step) {
     return `<tr><td>${argument}</td><td>${range}</td><td>${step}</td></tr>`;
 }
 function inputRow(name, start, end, step, constraint) {
-    return `
-    <tr>
-      <td>${name}</td>
-      <td><input type="number" id="${name}" step="${step}" /></td>
-      <td>[${start}; ${end}]</td>
-      <td>${step}</td>
-      <td>${constraint}</td>
-    </tr>`;
+    return `<tr>
+    <td>${name}</td>
+    <td><input type="number" id="${name}" step="${step}" /></td>
+    <td>[${start}; ${end}]</td>
+    <td>${step}</td>
+    <td>${constraint}</td>
+  </tr>`;
 }
-// --- Подсветка ---
+// --- Валидация и подсветка ---
 function validateAndHighlight(input, name) {
     const value = parseFloat(input.value);
     const bField = document.getElementById("b");
     const dField = document.getElementById("d");
-    const currentB = parseFloat(bField.value);
-    const currentD = parseFloat(dField.value);
+    const currentB = bField ? parseFloat(bField.value) : NaN;
+    const currentD = dField ? parseFloat(dField.value) : NaN;
     let start = 0, end = 0, step = 0;
     switch (name) {
         case "a":
@@ -117,47 +155,17 @@ function validateAndHighlight(input, name) {
             step = fStep;
             break;
     }
-    let valid = true;
-    if (isNaN(value) ||
-        value < start ||
-        value > end ||
-        !checkDiscret(value, start, end, step)) {
-        valid = false;
-    }
-    if (!checkForbiddenValues(value, name, currentB, currentD)) {
-        valid = false;
-    }
-    if ((name === "b" && !isNaN(currentD) && value === -currentD) ||
-        (name === "d" && !isNaN(currentB) && value === -currentB)) {
-        valid = false;
-    }
+    let valid = !(isNaN(value) || value < start || value > end || !checkDiscret(value, start, end, step));
+    valid = valid && checkForbiddenValues(value, name, currentB, currentD);
     input.style.backgroundColor = valid ? "#bbf7d0" : "#fca5a5";
 }
-// --- Обработка формы ---
-function handleFormSubmit() {
-    const a = parseFloat(document.getElementById("a").value);
-    b = parseFloat(document.getElementById("b").value);
-    d = parseFloat(document.getElementById("d").value);
-    const f = parseFloat(document.getElementById("f").value);
-    if (!validateInput(a, "a", aStart, aEnd, aStep))
-        return;
-    if (!validateInput(b, "b", bStart, bEnd, bStep))
-        return;
-    if (!validateInput(d, "d", dStart, dEnd, dStep))
-        return;
-    if (!validateInput(f, "f", fStart, fEnd, fStep))
-        return;
-    const result = calculateFunction(a, b, c, d, e, f);
-    showResultTable(a, b, c, d, e, f, result);
-}
-// --- Валидация ---
 function validateInput(value, name, start, end, step) {
     if (isNaN(value)) {
         alert(`Введите число для ${name}`);
         return false;
     }
     if (value < start || value > end) {
-        alert(`${name} вне диапазона [${start}, ${end}]`);
+        alert(`${name} вне диапазона [${start}; ${end}]`);
         return false;
     }
     if (!checkDiscret(value, start, end, step)) {
@@ -170,7 +178,6 @@ function validateInput(value, name, start, end, step) {
     }
     return true;
 }
-// --- Проверки ---
 function checkDiscret(value, start, end, step) {
     const epsilon = 1e-6;
     const fromBottom = Math.abs((value - start) % step);
@@ -186,7 +193,7 @@ function checkForbiddenValues(value, name, currentB, currentD) {
         default: return true;
     }
 }
-// --- Вычисление функции ---
+// --- Вычисления ---
 function calculateFunction(a, b, c, d, e, f) {
     return (a + c + d) / (e * f) +
         (c + b) / c -
@@ -194,38 +201,45 @@ function calculateFunction(a, b, c, d, e, f) {
         (d - b) / (d - c) -
         (a - c) / (b + d);
 }
-// --- Вывод результата ---
-function showResultTable(a, b, c, d, e, f, result) {
+// --- Отдельный расчёт при ручном вводе ---
+function handleFormSubmitSingle() {
+    const a = parseFloat(document.getElementById("a").value);
+    const bVal = parseFloat(document.getElementById("b").value);
+    const dVal = parseFloat(document.getElementById("d").value);
+    const f = parseFloat(document.getElementById("f").value);
+    if (!validateInput(a, "a", aStart, aEnd, aStep))
+        return;
+    if (!validateInput(bVal, "b", bStart, bEnd, bStep))
+        return;
+    if (!validateInput(dVal, "d", dStart, dEnd, dStep))
+        return;
+    if (!validateInput(f, "f", fStart, fEnd, fStep))
+        return;
+    const res = calculateFunction(a, bVal, c, dVal, e, f);
+    showResultTableSingle(a, bVal, c, dVal, e, f, res, 1);
+}
+// --- Таблица для одного набора ---
+function showResultTableSingle(a, bVal, c, dVal, e, f, result, setNumber) {
     const container = document.getElementById("resultContainer");
-    container.innerHTML = `
-<h2>Результаты вычислений:</h2>
-<table border="1" cellpadding="6" cellspacing="0">
-  <tr>
-    <th>Аргумент</th>
-    <th>Диапазон</th>
-    <th>Значение</th>
-    <th>Функция</th>
-    <th>Погрешность</th>
-  </tr>
-
-  ${resultRow("a", `[${aStart}; ${aEnd}]`, a)}
-  ${resultRow("b", `[${bStart}; ${bEnd}]`, b)}
-  ${resultRow("c", "Константа", c)}
-  ${resultRow("d", `[${dStart}; ${dEnd}]`, d)}
-  ${resultRow("e", "Константа", e)}
-  ${resultRow("f", `[${fStart}; ${fEnd}]`, f)}
-
-  <tr>
-    <td>Функция</td>
-    <td></td>
-    <td></td>
-    <td>${result.toFixed(6)}</td>
-    <td>"ПОГРЕШНОСТЬ"</td>
-  </tr>
-</table>
-`;
+    container.innerHTML += `
+    <h3>Набор ${setNumber}</h3>
+    <table border="1" cellpadding="6" cellspacing="0">
+      <tr>
+        <th>Аргумент</th><th>Диапазон</th><th>Значение</th><th>Функция</th><th>Погрешность</th>
+      </tr>
+      ${resultRow("a", `[${aStart}; ${aEnd}]`, a)}
+      ${resultRow("b", `[${bStart}; ${bEnd}]`, bVal)}
+      ${resultRow("c", "Константа", c)}
+      ${resultRow("d", `[${dStart}; ${dEnd}]`, dVal)}
+      ${resultRow("e", "Константа", e)}
+      ${resultRow("f", `[${fStart}; ${fEnd}]`, f)}
+      <tr>
+        <td>Функция</td><td></td><td></td><td>${result.toFixed(6)}</td><td>"ПОГРЕШНОСТЬ"</td>
+      </tr>
+    </table><br/>
+  `;
 }
 function resultRow(name, range, value) {
-    return `<tr><td>${name}</td><td>${range}</td><td>${value.toFixed(6)}</td><td></td></tr>`;
+    return `<tr><td>${name}</td><td>${range}</td><td>${value.toFixed(6)}</td><td></td><td></td></tr>`;
 }
 //# sourceMappingURL=index.js.map
