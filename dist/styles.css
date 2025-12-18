@@ -1,0 +1,58 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+h1, h2, h3 {
+  margin-top: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #888;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+th {
+  background-color: #eaeaea;
+}
+
+button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background-color: #0078d7;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+input.valid {
+  background-color: #bbf7d0;
+}
+
+input.invalid {
+  background-color: #fca5a5;
+}
+
+.formula {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.formula img {
+  max-width: 100%;
+}
+
+.file-load {
+  margin-top: 15px;
+}

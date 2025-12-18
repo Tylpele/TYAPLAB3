@@ -6,9 +6,6 @@ const c = 0.07;
 const dStart = -2, dEnd = 0.07, dStep = 0.01;
 const e = Math.pow(3, 1.0 / 3);
 const fStart = -0.3, fEnd = 1.7, fStep = 0.001;
-// --- Глобальные переменные ---
-let b = -1000;
-let d = -1000;
 // --- Создаём таблицы и форму ---
 window.addEventListener("DOMContentLoaded", () => {
     document.body.innerHTML = `
@@ -44,10 +41,10 @@ window.addEventListener("DOMContentLoaded", () => {
           <th>Шаг</th>
           <th>Ограничения</th>
         </tr>
-        ${inputRow("a", aStart, aEnd, aStep, "Не должно быть 0")}
-        ${inputRow("b", bStart, bEnd, bStep, "Не должно быть -d")}
-        ${inputRow("d", dStart, dEnd, dStep, "Не должно быть 0.07 и -b")}
-        ${inputRow("f", fStart, fEnd, fStep, "Не должно быть 0")}
+        ${inputRow("a", aStart, aEnd, aStep, "Не равно 0")}
+        ${inputRow("b", bStart, bEnd, bStep, "Не равно -d")}
+        ${inputRow("d", dStart, dEnd, dStep, "Не равно 0.07 и не равно -b")}
+        ${inputRow("f", fStart, fEnd, fStep, "Не равно 0")}
       </table>
       <br/>
 
@@ -62,14 +59,25 @@ window.addEventListener("DOMContentLoaded", () => {
 
     <div id="resultContainer"></div>
   `;
+    // Получаем текущие значения из полей ввода
+    const getCurrentValues = () => {
+        const bField = document.getElementById("b");
+        const dField = document.getElementById("d");
+        return {
+            currentB: bField ? parseFloat(bField.value) || 0 : 0,
+            currentD: dField ? parseFloat(dField.value) || 0 : 0
+        };
+    };
     const fields = ["a", "b", "d", "f"];
     fields.forEach(name => {
         const input = document.getElementById(name);
         input?.addEventListener("input", () => {
+            const { currentB, currentD } = getCurrentValues();
             fields.forEach(fieldName => {
                 const field = document.getElementById(fieldName);
-                if (field)
-                    validateAndHighlight(field, fieldName);
+                if (field) {
+                    validateAndHighlight(field, fieldName, currentB, currentD);
+                }
             });
         });
     });
@@ -97,13 +105,14 @@ window.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
                 const [a, bVal, dVal, f] = parts;
-                if (!validateInput(a, "a", aStart, aEnd, aStep))
+                // Для валидации взаимоисключающих значений нужно использовать текущие значения из этой же строки
+                if (!validateInput(a, "a", aStart, aEnd, aStep, 0, 0))
                     return;
-                if (!validateInput(bVal, "b", bStart, bEnd, bStep))
+                if (!validateInput(bVal, "b", bStart, bEnd, bStep, 0, dVal))
                     return;
-                if (!validateInput(dVal, "d", dStart, dEnd, dStep))
+                if (!validateInput(dVal, "d", dStart, dEnd, dStep, bVal, 0))
                     return;
-                if (!validateInput(f, "f", fStart, fEnd, fStep))
+                if (!validateInput(f, "f", fStart, fEnd, fStep, 0, 0))
                     return;
                 const res = calculateFunction(a, bVal, c, dVal, e, f);
                 showResultTableSingle(a, bVal, c, dVal, e, f, res, idx + 1);
@@ -126,12 +135,8 @@ function inputRow(name, start, end, step, constraint) {
   </tr>`;
 }
 // --- Валидация и подсветка ---
-function validateAndHighlight(input, name) {
+function validateAndHighlight(input, name, currentB, currentD) {
     const value = parseFloat(input.value);
-    const bField = document.getElementById("b");
-    const dField = document.getElementById("d");
-    const currentB = bField ? parseFloat(bField.value) : NaN;
-    const currentD = dField ? parseFloat(dField.value) : NaN;
     let start = 0, end = 0, step = 0;
     switch (name) {
         case "a":
@@ -159,7 +164,7 @@ function validateAndHighlight(input, name) {
     valid = valid && checkForbiddenValues(value, name, currentB, currentD);
     input.style.backgroundColor = valid ? "#bbf7d0" : "#fca5a5";
 }
-function validateInput(value, name, start, end, step) {
+function validateInput(value, name, start, end, step, relatedB, relatedD) {
     if (isNaN(value)) {
         alert(`Введите число для ${name}`);
         return false;
@@ -172,7 +177,7 @@ function validateInput(value, name, start, end, step) {
         alert(`${name} не соответствует шагу ${step}`);
         return false;
     }
-    if (!checkForbiddenValues(value, name, b, d)) {
+    if (!checkForbiddenValues(value, name, relatedB, relatedD)) {
         alert(`Значение ${name} запрещено`);
         return false;
     }
@@ -207,13 +212,14 @@ function handleFormSubmitSingle() {
     const bVal = parseFloat(document.getElementById("b").value);
     const dVal = parseFloat(document.getElementById("d").value);
     const f = parseFloat(document.getElementById("f").value);
-    if (!validateInput(a, "a", aStart, aEnd, aStep))
+    // Получаем значения для валидации взаимоисключающих значений
+    if (!validateInput(a, "a", aStart, aEnd, aStep, 0, 0))
         return;
-    if (!validateInput(bVal, "b", bStart, bEnd, bStep))
+    if (!validateInput(bVal, "b", bStart, bEnd, bStep, 0, dVal))
         return;
-    if (!validateInput(dVal, "d", dStart, dEnd, dStep))
+    if (!validateInput(dVal, "d", dStart, dEnd, dStep, bVal, 0))
         return;
-    if (!validateInput(f, "f", fStart, fEnd, fStep))
+    if (!validateInput(f, "f", fStart, fEnd, fStep, 0, 0))
         return;
     const res = calculateFunction(a, bVal, c, dVal, e, f);
     showResultTableSingle(a, bVal, c, dVal, e, f, res, 1);
