@@ -31,7 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 ${startTableRow("b", `[${bStart}; ${bEnd}]`, bStep.toString())}
                 ${startTableRow("c", c.toFixed(2), "Константа")}
                 ${startTableRow("d", `[${dStart}; ${dEnd}]`, dStep.toFixed(2))}
-                ${startTableRow("e", e.toFixed(4), "Константа")}
+                ${startTableRow("e", "3^(1/3) иррациональное представление - " + e.toString(), "Константа")}
                 ${startTableRow("f", `[${fStart}; ${fEnd}]`, fStep.toFixed(3))}
             </tbody>
         </table>
@@ -276,7 +276,7 @@ function showResultTableSingle(
                         <td>Функция</td>
                         <td></td>
                         <td></td>
-                        <td>${result.toFixed(6)}</td>
+                        <td>${result}</td>
                         <td>"ПОГРЕШНОСТЬ"</td>
                     </tr>
                 </tbody>
@@ -290,7 +290,7 @@ function resultRow(name: string, range: string, value: number): string {
         <tr>
             <td>${name}</td>
             <td>${range}</td>
-            <td>${value.toFixed(6)}</td>
+            <td>${value}</td>
             <td></td>
             <td></td>
         </tr>
